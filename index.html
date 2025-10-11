@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<title>Sanaharjoittelupeli - Action weekend</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 700px;
+    margin: 30px auto;
+    text-align: center;
+    background: #f4f4f4;
+  }
+  h1 { color: #333; }
+  #game {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  }
+  .option {
+    display: block;
+    margin: 10px auto;
+    padding: 10px;
+    width: 80%;
+    background: #e0e0e0;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .option:hover { background: #d0d0d0; }
+  #feedback { font-weight: bold; margin: 10px; }
+  button { margin-top: 15px; padding: 10px 20px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<h1>Englannin sanapeli – Toimintaviikonloppu</h1>
+<div id="game">
+  <p id="question">Ladataan peliä...</p>
+  <div id="options"></div>
+  <p id="feedback"></p>
+  <button id="nextBtn" onclick="nextWord()" style="display:none;">Seuraava</button>
+</div>
+
+<script>
+const words = [
+  { fi:"maalata", en:"paint" },
+  { fi:"mieluisa harrastus", en:"happy hobby" },
+  { fi:"kiinnostunut jostakin", en:"be into" },
+  { fi:"huolissaan", en:"worried about" },
+  { fi:"valmentaja", en:"coach" },
+  { fi:"nykyään", en:"nowadays" },
+  { fi:"kallis", en:"expensive" },
+  { fi:"suositella", en:"recommend" },
+  { fi:"leirinuotio", en:"campfire" },
+  { fi:"jännittävä", en:"exciting" },
+  { fi:"ryhmänjohtaja", en:"a group leader" },
+  { fi:"suosittu", en:"popular" },
+  { fi:"löytää", en:"find" },
+  { fi:"ateria", en:"a meal" },
+  { fi:"yksinäinen", en:"lonely" },
+  { fi:"kuulua", en:"belong to" },
+  { fi:"kyypärä", en:"helmet" },
+  { fi:"tuskin", en:"hardly" },
+  { fi:"valittaa", en:"complain" },
+  { fi:"rohkea", en:"brave" },
+  { fi:"ero", en:"difference" },
+  { fi:"johtaa", en:"lead" },
+  { fi:"uupunut", en:"tired" },
+  { fi:"valokuva", en:"a photograph" },
+  { fi:"uskoa", en:"believe" },
+  { fi:"kohtaa", en:"face" },
+  { fi:"antaa", en:"give" },
+  { fi:"aloittaa", en:"begin" },
+  { fi:"piirtää", en:"draw" },
+  { fi:"näyttää", en:"show" }
+];
+
+let current = 0;
+let used = [];
+let shuffled = [];
+
+function shuffle(array) {
+  return array.sort(() => Math.random() - 0.5);
+}
+
+function nextWord() {
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("nextBtn").style.display = "none";
+  if (used.length === words.length) {
+    document.getElementById("question").textContent = "Kaikki sanat on harjoiteltu!";
+    document.getElementById("options").innerHTML = "";
+    return;
+  }
+
+  let available = words.filter(w => !used.includes(w.fi));
+  let word = available[Math.floor(Math.random() * available.length)];
+  current = word;
+  used.push(word.fi);
+
+  document.getElementById("question").textContent = "Mikä on englanniksi: " + word.fi + "?";
+
+  // valitaan 4 väärää + oikea
+  let wrongs = shuffle(words.filter(w => w.en !== word.en)).slice(0,4);
+  let options = shuffle([...wrongs.map(w => w.en), word.en]);
+
+  const container = document.getElementById("options");
+  container.innerHTML = "";
+  options.forEach(opt => {
+    const btn = document.createElement("div");
+    btn.textContent = opt;
+    btn.className = "option";
+    btn.onclick = () => checkAnswer(opt);
+    container.appendChild(btn);
+  });
+}
+
+function checkAnswer(choice) {
+  const feedback = document.getElementById("feedback");
+  if (choice === current.en) {
+    feedback.textContent = "Oikein!";
+    feedback.style.color = "green";
+  } else {
+    feedback.textContent = "Väärin. Oikea vastaus: " + current.en;
+    feedback.style.color = "red";
+  }
+  document.getElementById("nextBtn").style.display = "inline-block";
+}
+
+nextWord();
+</script>
+
+</body>
+</html>
