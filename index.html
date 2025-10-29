@@ -1,134 +1,210 @@
 <!DOCTYPE html>
 <html lang="fi">
 <head>
-<meta charset="UTF-8">
-<title>Sanaharjoittelupeli - Action weekend</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    max-width: 700px;
-    margin: 30px auto;
-    text-align: center;
-    background: #f4f4f4;
-  }
-  h1 { color: #333; }
-  #game {
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-  }
-  .option {
-    display: block;
-    margin: 10px auto;
-    padding: 10px;
-    width: 80%;
-    background: #e0e0e0;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  .option:hover { background: #d0d0d0; }
-  #feedback { font-weight: bold; margin: 10px; }
-  button { margin-top: 15px; padding: 10px 20px; cursor: pointer; }
-</style>
+  <meta charset="UTF-8">
+  <title>Ruotsin järjestysluvut 1-12 - harjoittelu</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 600px;
+      margin: 2rem auto;
+      line-height: 1.5;
+    }
+    #card {
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    .question-label {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 0.25rem;
+    }
+    .question {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    input[type="text"] {
+      width: 100%;
+      font-size: 1.2rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid #999;
+    }
+    input[type="text"]:focus {
+      outline: 2px solid #000;
+    }
+    button {
+      margin-top: 1rem;
+      font-size: 1rem;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #000;
+      background: #000;
+      color: #fff;
+      cursor: pointer;
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    #result {
+      margin-top: 1rem;
+      min-height: 2rem;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    #stats {
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      color: #333;
+    }
+    .ok {
+      color: green;
+    }
+    .bad {
+      color: red;
+    }
+  </style>
 </head>
 <body>
 
-<h1>Englannin sanapeli – Toimintaviikonloppu</h1>
-<div id="game">
-  <p id="question">Ladataan peliä...</p>
-  <div id="options"></div>
-  <p id="feedback"></p>
-  <button id="nextBtn" onclick="nextWord()" style="display:none;">Seuraava</button>
-</div>
+  <h1>Ruotsin järjestysluvut 1-12</h1>
+  <p>
+    Vastaa ja paina Tarkista. Sivusto arpoo kysymyksiä loputtomasti.
+    Kysymys voi olla joko numero (esim. "5.") ja sinun pitää kirjoittaa ruotsin sana
+    ("femte"), tai ruotsin sana ("sjunde") ja sinun pitää kirjoittaa numero ("7").
+  </p>
 
-<script>
-const words = [
-  { fi:"maalata", en:"paint" },
-  { fi:"mieluisa harrastus", en:"happy hobby" },
-  { fi:"kiinnostunut jostakin", en:"be into" },
-  { fi:"huolissaan", en:"worried about" },
-  { fi:"valmentaja", en:"coach" },
-  { fi:"nykyään", en:"nowadays" },
-  { fi:"kallis", en:"expensive" },
-  { fi:"suositella", en:"recommend" },
-  { fi:"leirinuotio", en:"campfire" },
-  { fi:"jännittävä", en:"exciting" },
-  { fi:"ryhmänjohtaja", en:"a group leader" },
-  { fi:"suosittu", en:"popular" },
-  { fi:"löytää", en:"find" },
-  { fi:"ateria", en:"a meal" },
-  { fi:"yksinäinen", en:"lonely" },
-  { fi:"kuulua", en:"belong to" },
-  { fi:"kyypärä", en:"helmet" },
-  { fi:"tuskin", en:"hardly" },
-  { fi:"valittaa", en:"complain" },
-  { fi:"rohkea", en:"brave" },
-  { fi:"ero", en:"difference" },
-  { fi:"johtaa", en:"lead" },
-  { fi:"uupunut", en:"tired" },
-  { fi:"valokuva", en:"a photograph" },
-  { fi:"uskoa", en:"believe" },
-  { fi:"kohtaa", en:"face" },
-  { fi:"antaa", en:"give" },
-  { fi:"aloittaa", en:"begin" },
-  { fi:"piirtää", en:"draw" },
-  { fi:"näyttää", en:"show" }
-];
+  <div id="card">
+    <div class="question-label" id="qLabel"></div>
+    <div class="question" id="questionText">---</div>
 
-let current = 0;
-let used = [];
-let shuffled = [];
+    <label for="answerInput">Vastaus:</label>
+    <input id="answerInput" type="text" autocomplete="off" />
 
-function shuffle(array) {
-  return array.sort(() => Math.random() - 0.5);
-}
+    <button id="checkBtn">Tarkista</button>
 
-function nextWord() {
-  document.getElementById("feedback").textContent = "";
-  document.getElementById("nextBtn").style.display = "none";
-  if (used.length === words.length) {
-    document.getElementById("question").textContent = "Kaikki sanat on harjoiteltu!";
-    document.getElementById("options").innerHTML = "";
-    return;
-  }
+    <div id="result"></div>
+    <div id="stats"></div>
+  </div>
 
-  let available = words.filter(w => !used.includes(w.fi));
-  let word = available[Math.floor(Math.random() * available.length)];
-  current = word;
-  used.push(word.fi);
+  <script>
+    // Ruotsin järjestysluvut 1-12 taulukossa
+    // indeksi 0 = 1., indeksi 1 = 2., jne
+    const ordinals = [
+      "första",    // 1.
+      "andra",     // 2.
+      "tredje",    // 3.
+      "fjärde",    // 4.
+      "femte",     // 5.
+      "sjätte",    // 6.
+      "sjunde",    // 7.
+      "åttonde",   // 8.
+      "nionde",    // 9.
+      "tionde",    // 10.
+      "elfte",     // 11.
+      "tolfte"     // 12.
+    ];
 
-  document.getElementById("question").textContent = "Mikä on englanniksi: " + word.fi + "?";
+    // tilastot
+    let correctCount = 0;
+    let totalCount = 0;
 
-  // valitaan 4 väärää + oikea
-  let wrongs = shuffle(words.filter(w => w.en !== word.en)).slice(0,4);
-  let options = shuffle([...wrongs.map(w => w.en), word.en]);
+    // nykyinen kysymys
+    let currentNumber = null; // esim 5
+    let currentMode = null;   // "numToSwe" tai "sweToNum"
 
-  const container = document.getElementById("options");
-  container.innerHTML = "";
-  options.forEach(opt => {
-    const btn = document.createElement("div");
-    btn.textContent = opt;
-    btn.className = "option";
-    btn.onclick = () => checkAnswer(opt);
-    container.appendChild(btn);
-  });
-}
+    // apu satunnaiseen kokonaislukuun väliltä [min, max]
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
 
-function checkAnswer(choice) {
-  const feedback = document.getElementById("feedback");
-  if (choice === current.en) {
-    feedback.textContent = "Oikein!";
-    feedback.style.color = "green";
-  } else {
-    feedback.textContent = "Väärin. Oikea vastaus: " + current.en;
-    feedback.style.color = "red";
-  }
-  document.getElementById("nextBtn").style.display = "inline-block";
-}
+    // Luo uusi kysymys
+    function newQuestion() {
+      // Arvo luku 1-12
+      currentNumber = randInt(1, 12);
 
-nextWord();
-</script>
+      // Arvo kysymystyyppi
+      // 0 -> numero -> ruotsi
+      // 1 -> ruotsi -> numero
+      if (Math.random() < 0.5) {
+        currentMode = "numToSwe";
+        document.getElementById("qLabel").textContent = "Kirjoita ruotsiksi:";
+        document.getElementById("questionText").textContent = currentNumber + ".";
+      } else {
+        currentMode = "sweToNum";
+        document.getElementById("qLabel").textContent = "Kirjoita numerona:";
+        document.getElementById("questionText").textContent = ordinals[currentNumber - 1];
+      }
 
+      // tyhjennä kenttä ja palaute
+      const ans = document.getElementById("answerInput");
+      ans.value = "";
+      ans.focus();
+      document.getElementById("result").textContent = "";
+    }
+
+    // Tarkista vastaus
+    function checkAnswer() {
+      const userRaw = document.getElementById("answerInput").value.trim().toLowerCase();
+
+      let ok = false;
+      let correctAnswer = "";
+
+      if (currentMode === "numToSwe") {
+        correctAnswer = ordinals[currentNumber - 1];
+        // Hyväksy pienet skandit kirjoitettuna ilman tarkkeita vaihtoehtona
+        // esim fjärde -> fjaerde
+        // Luodaan yksinkertainen "normalisoitu" vertailu
+        function normSwe(s) {
+          return s
+            .replace(/å/g, "a")
+            .replace(/ä/g, "a")
+            .replace(/ö/g, "o");
+        }
+        ok = (userRaw === correctAnswer.toLowerCase()) ||
+             (normSwe(userRaw) === normSwe(correctAnswer.toLowerCase()));
+      } else {
+        correctAnswer = String(currentNumber);
+        // hyväksy myös "5." pisteellä
+        const noDot = userRaw.endsWith(".") ? userRaw.slice(0, -1) : userRaw;
+        ok = (noDot === correctAnswer);
+      }
+
+      totalCount += 1;
+      if (ok) {
+        correctCount += 1;
+        document.getElementById("result").innerHTML =
+          "<span class='ok'>Oikein.</span>";
+      } else {
+        document.getElementById("result").innerHTML =
+          "<span class='bad'>Väärin.</span> Oikea vastaus: " + correctAnswer;
+      }
+
+      document.getElementById("stats").textContent =
+        "Pisteet: " + correctCount + " / " + totalCount;
+
+      // Uusi kysymys heti
+      newQuestion();
+    }
+
+    // Nappi
+    document.getElementById("checkBtn").addEventListener("click", checkAnswer);
+
+    // Enter-näppäin vastaa nappia
+    document
+      .getElementById("answerInput")
+      .addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          checkAnswer();
+        }
+      });
+
+    // Käynnistä ensimmäinen kysymys
+    newQuestion();
+  </script>
 </body>
 </html>
