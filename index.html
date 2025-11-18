@@ -2,7 +2,7 @@
 <html lang="fi">
 <head>
   <meta charset="UTF-8">
-  <title>Ruotsin järjestysluvut 1-12 - harjoittelu</title>
+  <title>Englannin sanakoe - harjoittelu</title>
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -69,110 +69,90 @@
   </style>
 </head>
 <body>
-
-  <h1>Ruotsin järjestysluvut 1-12</h1>
+  <h1>Englannin sanakoe - harjoittelu</h1>
   <p>
     Vastaa ja paina Tarkista. Sivusto arpoo kysymyksiä loputtomasti.
-    Kysymys voi olla joko numero (esim. "5.") ja sinun pitää kirjoittaa ruotsin sana
-    ("femte"), tai ruotsin sana ("sjunde") ja sinun pitää kirjoittaa numero ("7").
+    Näet suomenkielisen käännöksen ja sinun pitää kirjoittaa sitä vastaava **englanninkielinen sana tai lause tismalleen oikein** (kuten luettelossa).
   </p>
-
   <div id="card">
-    <div class="question-label" id="qLabel"></div>
+    <div class="question-label" id="qLabel">Kirjoita englanniksi:</div>
     <div class="question" id="questionText">---</div>
-
     <label for="answerInput">Vastaus:</label>
     <input id="answerInput" type="text" autocomplete="off" />
-
     <button id="checkBtn">Tarkista</button>
-
     <div id="result"></div>
     <div id="stats"></div>
   </div>
-
   <script>
-    // Ruotsin järjestysluvut 1-12 taulukossa
-    // indeksi 0 = 1., indeksi 1 = 2., jne
-    const ordinals = [
-      "första",    // 1.
-      "andra",     // 2.
-      "tredje",    // 3.
-      "fjärde",    // 4.
-      "femte",     // 5.
-      "sjätte",    // 6.
-      "sjunde",    // 7.
-      "åttonde",   // 8.
-      "nionde",    // 9.
-      "tionde",    // 10.
-      "elfte",     // 11.
-      "tolfte"     // 12.
+    // Kuvasta poimitut englannin sanat/lauseet ja niiden suomenkieliset käännökset
+    const vocabulary = [
+      { fi: "lippu", en: "a ticket" },
+      { fi: "istuin, paikka", en: "a seat" },
+      { fi: "ravintolavaunu", en: "a dining car" },
+      { fi: "ensiapupakkaus", en: "a first-aid kit" },
+      { fi: "käymälä, wc", en: "a restroom, a toilet" },
+      { fi: "minun syyni", en: "my fault" },
+      { fi: "muut matkustajat", en: "other passengers" },
+      { fi: "seuraava asema", en: "the next station" },
+      { fi: "tilan puute", en: "a lack of room" },
+      { fi: "kurja alku", en: "a miserable beginning" },
+      { fi: "iso yllätys", en: "a big surprise" },
+      { fi: "kahden ja puolen päivän junamatka", en: "a two-and-a-half-day train journey" },
+      { fi: "kuulua tanssiryhmään", en: "belong to a dance group" },
+      { fi: "päättää pitää yhden yön pysähdys", en: "decide to have a one-night stopover" },
+      { fi: "Älä syytä minua!", en: "Don't blame me!" },
+      { fi: "esiintyä kaduilla", en: "perform on the streets" },
+      { fi: "olla samaa mieltä Leen kanssa", en: "agree with Lee" },
+      { fi: "matkustaa bussilla", en: "travel by bus" },
+      { fi: "vaihtaa junaa", en: "change trains" },
+      { fi: "jäädä pois junasta", en: "get off the train" },
+      { fi: "varata huone", en: "reserve a room" },
+      { fi: "jakaa huone", en: "share a room" },
+      { fi: "vahingoittaa ympäristöä", en: "harm the environment" },
+      { fi: "polttaa polttoainetta", en: "burn fuel" },
+      { fi: "nyrjäyttää nilkan", en: "sprain an ankle" },
+      { fi: "ottaa osaa tapahtumaan", en: "take part in an event" },
+      { fi: "sairastua", en: "get sick" },
+      { fi: "kuluttaa rahaa", en: "spend money" },
+      { fi: "vilkaista", en: "have a look" },
     ];
-
     // tilastot
     let correctCount = 0;
     let totalCount = 0;
-
     // nykyinen kysymys
-    let currentNumber = null; // esim 5
-    let currentMode = null;   // "numToSwe" tai "sweToNum"
-
+    let currentVocab = null; 
+    
     // apu satunnaiseen kokonaislukuun väliltä [min, max]
     function randInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
-
+    
     // Luo uusi kysymys
     function newQuestion() {
-      // Arvo luku 1-12
-      currentNumber = randInt(1, 12);
-
-      // Arvo kysymystyyppi
-      // 0 -> numero -> ruotsi
-      // 1 -> ruotsi -> numero
-      if (Math.random() < 0.5) {
-        currentMode = "numToSwe";
-        document.getElementById("qLabel").textContent = "Kirjoita ruotsiksi:";
-        document.getElementById("questionText").textContent = currentNumber + ".";
-      } else {
-        currentMode = "sweToNum";
-        document.getElementById("qLabel").textContent = "Kirjoita numerona:";
-        document.getElementById("questionText").textContent = ordinals[currentNumber - 1];
-      }
-
+      // Arvo satunnainen indeksi sanastosta
+      const index = randInt(0, vocabulary.length - 1);
+      currentVocab = vocabulary[index];
+      
+      // Kysymys on aina suomi -> englanti
+      document.getElementById("qLabel").textContent = "Kirjoita englanniksi:";
+      document.getElementById("questionText").textContent = currentVocab.fi;
+      
       // tyhjennä kenttä ja palaute
       const ans = document.getElementById("answerInput");
       ans.value = "";
       ans.focus();
       document.getElementById("result").textContent = "";
     }
-
+    
     // Tarkista vastaus
     function checkAnswer() {
-      const userRaw = document.getElementById("answerInput").value.trim().toLowerCase();
-
-      let ok = false;
-      let correctAnswer = "";
-
-      if (currentMode === "numToSwe") {
-        correctAnswer = ordinals[currentNumber - 1];
-        // Hyväksy pienet skandit kirjoitettuna ilman tarkkeita vaihtoehtona
-        // esim fjärde -> fjaerde
-        // Luodaan yksinkertainen "normalisoitu" vertailu
-        function normSwe(s) {
-          return s
-            .replace(/å/g, "a")
-            .replace(/ä/g, "a")
-            .replace(/ö/g, "o");
-        }
-        ok = (userRaw === correctAnswer.toLowerCase()) ||
-             (normSwe(userRaw) === normSwe(correctAnswer.toLowerCase()));
-      } else {
-        correctAnswer = String(currentNumber);
-        // hyväksy myös "5." pisteellä
-        const noDot = userRaw.endsWith(".") ? userRaw.slice(0, -1) : userRaw;
-        ok = (noDot === correctAnswer);
-      }
-
+      const userRaw = document.getElementById("answerInput").value.trim();
+      const correctAnswer = currentVocab.en;
+      
+      // Tarkistetaan vastaus: täytyy olla täsmälleen oikein
+      // (huomioimatta isoja/pieniä kirjaimia alkuperäisessä koodissa olleen logiikan mukaan)
+      const ok = (userRaw.toLowerCase() === correctAnswer.toLowerCase());
+      
       totalCount += 1;
       if (ok) {
         correctCount += 1;
@@ -182,17 +162,17 @@
         document.getElementById("result").innerHTML =
           "<span class='bad'>Väärin.</span> Oikea vastaus: " + correctAnswer;
       }
-
+      
       document.getElementById("stats").textContent =
         "Pisteet: " + correctCount + " / " + totalCount;
-
+      
       // Uusi kysymys heti
       newQuestion();
     }
-
+    
     // Nappi
     document.getElementById("checkBtn").addEventListener("click", checkAnswer);
-
+    
     // Enter-näppäin vastaa nappia
     document
       .getElementById("answerInput")
@@ -202,7 +182,7 @@
           checkAnswer();
         }
       });
-
+      
     // Käynnistä ensimmäinen kysymys
     newQuestion();
   </script>
