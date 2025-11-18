@@ -62,9 +62,31 @@
     }
     .ok {
       color: green;
+      font-weight: 600;
     }
     .bad {
       color: red;
+      font-weight: 600;
+    }
+    .feedback-table {
+      margin-top: 1rem;
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 1rem;
+    }
+    .feedback-table th, .feedback-table td {
+      padding: 0.5rem;
+      border: 1px solid #eee;
+    }
+    .feedback-table th {
+      text-align: left;
+      background-color: #f7f7f7;
+      width: 40%;
+    }
+    .feedback-table td {
+      font-family: monospace;
+      font-size: 1.1em;
+      white-space: pre-wrap; /* Estää ylivuodon pitkissä vastauksissa */
     }
   </style>
 </head>
@@ -141,33 +163,48 @@
       const ans = document.getElementById("answerInput");
       ans.value = "";
       ans.focus();
-      document.getElementById("result").textContent = "";
+      document.getElementById("result").innerHTML = ""; // Tyhjennä palaute
     }
     
     // Tarkista vastaus
     function checkAnswer() {
       const userRaw = document.getElementById("answerInput").value.trim();
       const correctAnswer = currentVocab.en;
+      const resultDiv = document.getElementById("result");
       
-      // Tarkistetaan vastaus: täytyy olla täsmälleen oikein
-      // (huomioimatta isoja/pieniä kirjaimia alkuperäisessä koodissa olleen logiikan mukaan)
+      // Tarkistetaan vastaus: täytyy olla täsmälleen oikein (case-insensitivenä)
       const ok = (userRaw.toLowerCase() === correctAnswer.toLowerCase());
       
       totalCount += 1;
+      
+      let feedbackHTML = "";
+      
       if (ok) {
         correctCount += 1;
-        document.getElementById("result").innerHTML =
-          "<span class='ok'>Oikein.</span>";
+        feedbackHTML = "<span class='ok'>⭐ Aivan oikein! ⭐</span>";
       } else {
-        document.getElementById("result").innerHTML =
-          "<span class='bad'>Väärin.</span> Oikea vastaus: " + correctAnswer;
+        feedbackHTML = "<span class='bad'>Väärin.</span> Tässä vertailu:";
+        feedbackHTML += `
+          <table class="feedback-table">
+            <tr>
+              <th>Oikea vastaus:</th>
+              <td>${correctAnswer}</td>
+            </tr>
+            <tr>
+              <th>Sinun vastauksesi:</th>
+              <td>${userRaw}</td>
+            </tr>
+          </table>
+        `;
       }
+      
+      resultDiv.innerHTML = feedbackHTML;
       
       document.getElementById("stats").textContent =
         "Pisteet: " + correctCount + " / " + totalCount;
-      
-      // Uusi kysymys heti
-      newQuestion();
+
+      // Uusi kysymys heti, mutta viiveellä jos vastaus oli väärin (jotta ehtii nähdä korjauksen)
+      setTimeout(newQuestion, ok ? 200 : 3000); 
     }
     
     // Nappi
