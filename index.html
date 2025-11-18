@@ -36,8 +36,12 @@
     input[type="text"]:focus {
       outline: 2px solid #000;
     }
-    button {
+    .button-group {
+      display: flex;
+      gap: 1rem;
       margin-top: 1rem;
+    }
+    button {
       font-size: 1rem;
       padding: 0.6rem 1rem;
       border-radius: 8px;
@@ -45,6 +49,7 @@
       background: #000;
       color: #fff;
       cursor: pointer;
+      flex-grow: 1; /* Tee napeista samankokoisia */
     }
     button:active {
       transform: scale(0.98);
@@ -86,22 +91,31 @@
     .feedback-table td {
       font-family: monospace;
       font-size: 1.1em;
-      white-space: pre-wrap; /* Estää ylivuodon pitkissä vastauksissa */
+      white-space: pre-wrap;
+    }
+    /* Piilotetaan nappi kun vastaus on käsitelty */
+    #checkBtn.hidden {
+        display: none;
+    }
+    #nextBtn.hidden {
+        display: none;
     }
   </style>
 </head>
 <body>
   <h1>Englannin sanakoe - harjoittelu</h1>
   <p>
-    Vastaa ja paina Tarkista. Sivusto arpoo kysymyksiä loputtomasti.
-    Näet suomenkielisen käännöksen ja sinun pitää kirjoittaa sitä vastaava **englanninkielinen sana tai lause tismalleen oikein** (kuten luettelossa).
+    Vastaa suomenkieliseen käännökseen. Kirjoita vastaava **englanninkielinen sana tai lause tismalleen oikein** (kuten luettelossa).
   </p>
   <div id="card">
     <div class="question-label" id="qLabel">Kirjoita englanniksi:</div>
     <div class="question" id="questionText">---</div>
     <label for="answerInput">Vastaus:</label>
     <input id="answerInput" type="text" autocomplete="off" />
-    <button id="checkBtn">Tarkista</button>
+    <div class="button-group">
+        <button id="checkBtn">Tarkista</button>
+        <button id="nextBtn" class="hidden" style="background-color: #0056b3;">Seuraava kysymys</button>
+    </div>
     <div id="result"></div>
     <div id="stats"></div>
   </div>
@@ -144,6 +158,12 @@
     // nykyinen kysymys
     let currentVocab = null; 
     
+    // Elementit
+    const ansInput = document.getElementById("answerInput");
+    const checkBtn = document.getElementById("checkBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const resultDiv = document.getElementById("result");
+    
     // apu satunnaiseen kokonaislukuun väliltä [min, max]
     function randInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -151,6 +171,14 @@
     
     // Luo uusi kysymys
     function newQuestion() {
+      // Salli uusi vastaus
+      ansInput.disabled = false; 
+      ansInput.value = "";
+      ansInput.focus();
+      checkBtn.classList.remove("hidden");
+      nextBtn.classList.add("hidden");
+      resultDiv.innerHTML = "";
+      
       // Arvo satunnainen indeksi sanastosta
       const index = randInt(0, vocabulary.length - 1);
       currentVocab = vocabulary[index];
@@ -158,19 +186,24 @@
       // Kysymys on aina suomi -> englanti
       document.getElementById("qLabel").textContent = "Kirjoita englanniksi:";
       document.getElementById("questionText").textContent = currentVocab.fi;
-      
-      // tyhjennä kenttä ja palaute
-      const ans = document.getElementById("answerInput");
-      ans.value = "";
-      ans.focus();
-      document.getElementById("result").innerHTML = ""; // Tyhjennä palaute
     }
     
     // Tarkista vastaus
     function checkAnswer() {
-      const userRaw = document.getElementById("answerInput").value.trim();
+      const userRaw = ansInput.value.trim();
+      
+      // Estä vastaaminen, jos kenttä on tyhjä
+      if (userRaw.length === 0) {
+        resultDiv.innerHTML = "<span class='bad'>Kirjoita ensin vastaus!</span>";
+        return;
+      }
+      
       const correctAnswer = currentVocab.en;
-      const resultDiv = document.getElementById("result");
+      
+      // Estä vastauskentän muokkaus ja vaihda napit
+      ansInput.disabled = true;
+      checkBtn.classList.add("hidden");
+      nextBtn.classList.remove("hidden");
       
       // Tarkistetaan vastaus: täytyy olla täsmälleen oikein (case-insensitivenä)
       const ok = (userRaw.toLowerCase() === correctAnswer.toLowerCase());
@@ -181,7 +214,7 @@
       
       if (ok) {
         correctCount += 1;
-        feedbackHTML = "<span class='ok'>⭐ Aivan oikein! ⭐</span>";
+        feedbackHTML = "<span class='ok'>⭐ Aivan oikein! Hyvä! ⭐</span>";
       } else {
         feedbackHTML = "<span class='bad'>Väärin.</span> Tässä vertailu:";
         feedbackHTML += `
@@ -203,22 +236,28 @@
       document.getElementById("stats").textContent =
         "Pisteet: " + correctCount + " / " + totalCount;
 
-      // Uusi kysymys heti, mutta viiveellä jos vastaus oli väärin (jotta ehtii nähdä korjauksen)
-      setTimeout(newQuestion, ok ? 200 : 3000); 
+      nextBtn.focus(); // Vie fokus seuraavaan nappiin
     }
     
-    // Nappi
-    document.getElementById("checkBtn").addEventListener("click", checkAnswer);
+    // Nappien kuuntelijat
+    checkBtn.addEventListener("click", checkAnswer);
+    nextBtn.addEventListener("click", newQuestion);
     
-    // Enter-näppäin vastaa nappia
-    document
-      .getElementById("answerInput")
-      .addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          checkAnswer();
+    // Enter-näppäin vastaa tarkista-nappia vain, jos se on näkyvissä
+    ansInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !checkBtn.classList.contains("hidden")) {
+            e.preventDefault();
+            checkAnswer();
         }
-      });
+    });
+
+    // Enter-näppäin vastaa seuraava-nappia, jos se on näkyvissä
+    nextBtn.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !nextBtn.classList.contains("hidden")) {
+            e.preventDefault();
+            newQuestion();
+        }
+    });
       
     // Käynnistä ensimmäinen kysymys
     newQuestion();
